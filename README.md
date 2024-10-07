@@ -1,0 +1,1 @@
+# hinghwa-dict-basic-service
