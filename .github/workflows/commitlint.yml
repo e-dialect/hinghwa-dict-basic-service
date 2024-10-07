@@ -1,0 +1,23 @@
+name: Commitlint
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  commitlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+      - run: npm install -g @commitlint/cli @commitlint/config-conventional
+      - run: |
+          echo "module.exports = {extends: ['@commitlint/config-conventional']}" > commitlint.config.js
+      - run: commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
