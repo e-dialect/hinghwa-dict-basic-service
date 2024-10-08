@@ -5,7 +5,6 @@ on:
     # 仅当推送分支不是main时运行工作流
     branches-ignore: ["main"]
   pull_request:
-    # 在PR到main分支时检查
     branches: ["main"]
 
 jobs:
