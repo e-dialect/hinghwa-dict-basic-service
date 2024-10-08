@@ -2,10 +2,11 @@ name: Commitlint
 
 on:
   push:
-    branches: ["main"]
+    # 仅当推送分支不是main时运行工作流
+    branches-ignore: ["main"]
   pull_request:
+    # 在PR到main分支时检查
     branches: ["main"]
-  workflow_dispatch:
 
 jobs:
   commitlint:
@@ -20,4 +21,6 @@ jobs:
       - run: npm install -g @commitlint/cli @commitlint/config-conventional
       - run: |
           echo "module.exports = {extends: ['@commitlint/config-conventional']}" > commitlint.config.js
-      - run: commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+      # 修改commitlint检查范围，只检查当前分支的最近提交，修改--from，使其从两个分支的共同祖先开始检查而不是最开始的提交
+      - run: commitlint --from $(git merge-base origin/main HEAD) --to HEAD --verbose
+
