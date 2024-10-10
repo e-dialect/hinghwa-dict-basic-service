@@ -2,9 +2,9 @@ name: Commitlint
 
 on:
   push:
-    branches: ["main"]
+    branches-ignore: ["main"]  # 排除 main 分支的 push 事件
   pull_request:
-    branches: ["main"]
+    branches-ignore: ["main"]  # 排除 main 分支的 pull request 事件
   workflow_dispatch:
 
 jobs:
@@ -20,4 +20,10 @@ jobs:
       - run: npm install -g @commitlint/cli @commitlint/config-conventional
       - run: |
           echo "module.exports = {extends: ['@commitlint/config-conventional']}" > commitlint.config.js
-      - run: commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+      - name: Check commits
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+            commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+          else
+            commitlint --from $(git rev-list --max-parents=0 HEAD) --to HEAD --verbose
+          fi
