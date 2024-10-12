@@ -1,16 +1,15 @@
-name: Check Go Code Format
+name: Go Format Check
 
 on:
-  pull_request:
-    branches:
-      - main
   push:
     branches:
-      - main
+      - my-ci-branch
+  pull_request:
+    branches:
+      - my-ci-branch
 
 jobs:
   gofmt-check:
-    name: Check Go Format
     runs-on: ubuntu-latest
 
     steps:
@@ -20,7 +19,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
-        go-version: '1.23.1'  
+        go-version: '1.23.1'
 
     - name: Run gofmt to check formatting
       run: |
@@ -30,3 +29,4 @@ jobs:
         else
           echo "Go code is properly formatted."
         fi
+
