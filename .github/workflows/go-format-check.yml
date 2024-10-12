@@ -1,4 +1,28 @@
-ci(go): add gofmt check on Windows for code formatting
+name: Go Format Check
 
-Configured a CI workflow to run gofmt on the 'my-ci-branch' branch for both push and pull request events.
-Switched the workflow to run on the 'windows-latest' environment. This ensures Go code formatting is checked on a Windows-based system using gofmt.
+on:
+  push:
+    branches:
+      - my-ci-branch
+  pull_request:
+    branches:
+      - my-ci-branch
+
+jobs:
+  gofmt-check:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23.1'
+      - name: Run gofmt to check formatting
+        run: |
+          if [ -n "$(gofmt -l.)" ]; then
+            echo "Go code is not properly formatted."
+            exit 1
+          else
+            echo "Go code is properly formatted."
+          fi
