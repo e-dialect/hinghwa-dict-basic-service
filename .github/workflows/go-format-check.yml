@@ -3,25 +3,29 @@ name: Go Format Check
 on:
   push:
     branches:
-      - my-ci-branch
+      - main
   pull_request:
     branches:
-      - my-ci-branch
+      - main
 
 jobs:
   gofmt-check:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.23.1'
+          go-version: '1.20'
+
       - name: Run gofmt to check formatting
         run: |
-          if [ -n "$(gofmt -l.)" ]; then
-            echo "Go code is not properly formatted."
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "Go code is not properly formatted:"
+            echo "$unformatted"
             exit 1
           else
             echo "Go code is properly formatted."
