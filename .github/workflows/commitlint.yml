@@ -3,7 +3,7 @@ name: Commitlint
 on:
   push:
     branches-ignore: ["main"]  # 排除 main 分支的 push 事件
-  pull_request:
+  pull_request:                # 修正为 pull_request
     # main 分支的 pull request 事件也会运行
   workflow_dispatch:
 
@@ -16,21 +16,10 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: '16'  # 使用一个稳定的 Node.js 版本，比如 16
       - run: npm install -g @commitlint/cli @commitlint/config-conventional
       - run: |
           echo "module.exports = {extends: ['@commitlint/config-conventional']}" > commitlint.config.js
-      - name: Request review
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v6
-        with:
-          script: |
-            github.pulls.createReviewRequest({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.issue.number,
-              reviewers: ['${{ github.actor }}']
-            });
       - name: Check commits
         run: |
           if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
@@ -38,6 +27,7 @@ jobs:
           else
             commitlint --from $(git rev-list --max-parents=0 HEAD) --to HEAD --verbose
           fi
+
 
 
 
