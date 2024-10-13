@@ -2,9 +2,11 @@ name: Commitlint
 
 on:
   push:
-    branches-ignore: ["main"]  # 排除 main 分支的 push 事件
+    branches-ignore: 
+      - "main"  # 排除 main 分支的 push 事件
   pull_request:
-    branches-ignore: ["main"]  # 排除 main 分支的 pull request 事件
+    branches-ignore: 
+      - "main"  # 排除 main 分支的 pull_request 事件
   workflow_dispatch:  # 允许手动触发工作流程
 
 jobs:
