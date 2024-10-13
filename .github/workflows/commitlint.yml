@@ -4,7 +4,7 @@ on:
   push:
     branches-ignore: ["main"]  # 排除 main 分支的 push 事件
   pull_request:
-    # 移除对 main 分支的排除，使其在 main 分支的 pull request 事件中也能运行
+    # main 分支的 pull request 事件也会运行
   workflow_dispatch:
 
 jobs:
@@ -25,18 +25,19 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const { github, context } = require('@actions/github');
             github.pulls.createReviewRequest({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: context.issue.number,
-              reviewers: ['${{ github.actor }}'] 
+              reviewers: ['${{ github.actor }}']
             });
       - name: Check commits
         run: |
           if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
-            commitlint --from ${{ github.event.pull_request.base.sha }} --to${{ github.event.pull_request.head.sha }} --verbose
+            commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
           else
             commitlint --from $(git rev-list --max-parents=0 HEAD) --to HEAD --verbose
           fi
+
+
 
