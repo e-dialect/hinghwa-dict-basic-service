@@ -1,15 +1,16 @@
-name: Go Format and Commit Lint Check
+name: Go Format Check
 
 on:
   push:
-    branches-ignore:
+    branches:
       - main
   pull_request:
     branches:
       - main
 
 jobs:
-  gofmt-check:
+  gofmt:
+    name: Check Go Formatting
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -20,42 +21,15 @@ jobs:
         with:
           go-version: '1.20'
 
-      - name: Run gofmt to check formatting
+      - name: Run gofmt
         run: |
           unformatted=$(gofmt -l .)
           if [ -n "$unformatted" ]; then
-            echo "Go code is not properly formatted:"
+            echo "The following files are not formatted properly:"
             echo "$unformatted"
+            echo "Please run 'gofmt -w .' to format your Go code."
             exit 1
-          else
-            echo "Go code is properly formatted."
           fi
 
-  commitlint:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '16'
-      - run: npm install -g @commitlint/cli @commitlint/config-conventional
-      - name: Validate PR commits
-        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
-
-  validate-branch-commits:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '16'
-      - run: npm install -g @commitlint/cli @commitlint/config-conventional
-      - name: Validate branch commits
-        run: |
-          git log --format="%s" origin/main..HEAD | xargs -I {} echo '{}' | npx commitlint --verbose
+      - name: Run go vet
+        run: go vet ./...
