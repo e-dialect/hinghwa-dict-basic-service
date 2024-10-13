@@ -2,62 +2,28 @@ name: Commitlint
 
 on:
   push:
-    branches-ignore:
-      - "main"  # 排除 main 分支的 push 事件
+    branches-ignore: ["main"]  # 排除 main 分支的 push 事件
   pull_request:
-    branches-ignore:
-      - "main"  # 排除 main 分支的 pull_request 事件
-  workflow_dispatch:  # 允许手动触发工作流程
+    branches-ignore: ["main"]  # 排除 main 分支的 pull request 事件
+  workflow_dispatch:
 
 jobs:
   commitlint:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3  # 使用最新版本的 checkout 动作
+      - uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # 获取完整的提交历史
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3  # 使用最新版本的 setup-node 动作
+          fetch-depth: 0
+      - uses: actions/setup-node@v3
         with:
-          node-version: '20'  # 显式指定 Node.js 版本
-
-      - name: Ensure package.json Exists
-        id: check_package_json
-        run: |
-          if [ -f "package.json" ]; then
-            echo "PACKAGE_JSON_EXISTS=true" >> $GITHUB_ENV
-          else
-            echo "PACKAGE_JSON_EXISTS=false" >> $GITHUB_ENV
-          fi
-
-      - name: Generate package-lock.json if necessary
-        if: env.PACKAGE_JSON_EXISTS == 'true'
-        run: |
-          # 如果 package-lock.json 不存在，则生成
-          if [ ! -f "package-lock.json" ]; then
-            npm install
-          fi
-
-      - name: Install Dependencies
-        if: env.PACKAGE_JSON_EXISTS == 'true'
-        run: |
-          npm ci  # 使用 npm ci 安装依赖
-
-      - name: Configure Commitlint
-        if: env.PACKAGE_JSON_EXISTS == 'true'
-        run: |
-          # 确保 .commitlintrc.js 存在
-          touch .commitlintrc.js
-          echo "module.exports = {extends: ['@commitlint/config-conventional']};"> .commitlintrc.js
-
-      - name: Check Commits
-        if: env.PACKAGE_JSON_EXISTS == 'true'
+          node-version: '20'
+      - run: npm install -g @commitlint/cli @commitlint/config-conventional
+      - run: |
+          echo "module.exports = {extends: ['@commitlint/config-conventional']}" > commitlint.config.js
+      - name: Check commits
         run: |
           if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
-            npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+            commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
           else
-            npx commitlint --from $(git rev-list --max-parents=0 HEAD) --to HEAD --verbose
+            commitlint --from $(git rev-list --max-parents=0 HEAD) --to HEAD --verbose
           fi
