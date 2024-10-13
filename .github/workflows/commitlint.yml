@@ -28,13 +28,13 @@ jobs:
         id: check_package_json
         run: |
           if [ -f "package.json" ]; then
-            echo "::set-output name=exists::true"
+            echo "PACKAGE_JSON_EXISTS=true" >> $GITHUB_ENV
           else
-            echo "::set-output name=exists::false"
+            echo "PACKAGE_JSON_EXISTS=false" >> $GITHUB_ENV
           fi
 
       - name: Generate package-lock.json if necessary
-        if: steps.check_package_json.outputs.exists == 'true'
+        if: env.PACKAGE_JSON_EXISTS == 'true'
         run: |
           # 如果 package-lock.json 不存在，则生成
           if [ ! -f "package-lock.json" ]; then
@@ -42,19 +42,19 @@ jobs:
           fi
 
       - name: Install Dependencies
-        if: steps.check_package_json.outputs.exists == 'true'
+        if: env.PACKAGE_JSON_EXISTS == 'true'
         run: |
           npm ci  # 使用 npm ci 安装依赖
 
       - name: Configure Commitlint
-        if: steps.check_package_json.outputs.exists == 'true'
+        if: env.PACKAGE_JSON_EXISTS == 'true'
         run: |
           # 确保 .commitlintrc.js 存在
           touch .commitlintrc.js
           echo "module.exports = {extends: ['@commitlint/config-conventional']};"> .commitlintrc.js
 
       - name: Check Commits
-        if: steps.check_package_json.outputs.exists == 'true'
+        if: env.PACKAGE_JSON_EXISTS == 'true'
         run: |
           if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
             npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
