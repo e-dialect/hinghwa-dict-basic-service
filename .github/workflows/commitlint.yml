@@ -25,11 +25,17 @@ jobs:
           echo "module.exports = {extends: ['@commitlint/config-conventional']}" > commitlint.config.js
 
       - name: Check commits
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
         run: |
           # 获取当前仓库的所有提交信息
           git log --pretty=format:'%H %s%n' --no-merges | tee /tmp/commits.log
           # 打印所有提交信息以供调试
           cat /tmp/commits.log
+
+          # 获取环境变量中的 GitHub 事件上下文
+          echo "GitHub Event Context:"
+          echo "$GITHUB_CONTEXT"
 
           # 确定检查的范围
           if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
@@ -44,6 +50,9 @@ jobs:
             PARENT_SHA=$(git rev-parse --verify HEAD~1)
             COMMIT_RANGE="$PARENT_SHA...HEAD"
           fi
+
+          # 打印提交范围
+          echo "Commit Range: $COMMIT_RANGE"
 
           # 确保提交范围有效
           if [ -z "$COMMIT_RANGE" ]; then
