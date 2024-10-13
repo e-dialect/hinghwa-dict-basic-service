@@ -15,17 +15,24 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4  # 使用最新版本的 checkout 动作
+        uses: actions/checkout@v3  # 使用最新版本的 checkout 动作
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4  # 使用最新版本的 setup-node 动作
+        uses: actions/setup-node@v3  # 使用最新版本的 setup-node 动作
         with:
           node-version: '20'  # 显式指定 Node.js 版本
 
+      - name: Generate package-lock.json
+        run: |
+          # 确保 package-lock.json 文件存在
+          if [ ! -f "package-lock.json" ]; then
+            # 如果 package-lock.json 不存在，则生成
+            npm install
+          fi
+
       - name: Install Dependencies
         run: |
-          npm ci
-          npm install @commitlint/cli @commitlint/config-conventional
+          npm ci  # 使用 npm ci 安装依赖
 
       - name: Configure Commitlint
         run: |
