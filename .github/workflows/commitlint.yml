@@ -1,3 +1,4 @@
+
 name: Commitlint
 
 on:
@@ -13,52 +14,17 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # 获取完整的历史记录
-
+          fetch-depth: 0
       - uses: actions/setup-node@v3
         with:
           node-version: '20'
-
       - run: npm install -g @commitlint/cli @commitlint/config-conventional
-
       - run: |
           echo "module.exports = {extends: ['@commitlint/config-conventional']}" > commitlint.config.js
-
       - name: Check commits
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
         run: |
-          # 获取当前仓库的所有提交信息
-          git log --pretty=format:'%H %s%n' --no-merges | tee /tmp/commits.log
-          # 打印所有提交信息以供调试
-          cat /tmp/commits.log
-
-          # 获取环境变量中的 GitHub 事件上下文
-          echo "GitHub Event Context:"
-          echo "$GITHUB_CONTEXT"
-
-          # 确定检查的范围
           if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
-            # 获取 PR 的 base 和 head SHA
-            BASE_SHA=${{ github.event.pull_request.base.sha }}
-            HEAD_SHA=${{ github.event.pull_request.head.sha }}
-
-            # 确保提交范围正确
-            COMMIT_RANGE="$BASE_SHA...$HEAD_SHA"
+            commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
           else
-            # 对于非 PR 事件，获取最近一次提交的父级 SHA
-            PARENT_SHA=$(git rev-parse --verify HEAD~1)
-            COMMIT_RANGE="$PARENT_SHA...HEAD"
+            commitlint --from $(git rev-list --max-parents=0 HEAD) --to HEAD --verbose
           fi
-
-          # 打印提交范围
-          echo "Commit Range: $COMMIT_RANGE"
-
-          # 确保提交范围有效
-          if [ -z "$COMMIT_RANGE" ]; then
-            echo "No valid commit range found."
-            exit 0
-          fi
-
-          # 执行commitlint检查
-          npx commitlint --from $COMMIT_RANGE --to HEAD --verbose
