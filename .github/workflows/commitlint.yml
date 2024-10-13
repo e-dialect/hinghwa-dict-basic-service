@@ -1,32 +1,26 @@
 name: Commitlint
 
 on:
-  pull_request:  # 只在 PR 事件时触发
-  workflow_dispatch:  # 允许手动触发
+  pull_request:  # 直接删除 branches-ignore 字段
+  workflow_dispatch:
 
 jobs:
   commitlint:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # 获取完整的历史记录
-
-      - name: Setup Node.js Environment
-        uses: actions/setup-node@v3
+          fetch-depth: 0
+      - uses: actions/setup-node@v3
         with:
-          node-version: '20'
-
-      - name: Install Commitlint
-        run: npm install -g @commitlint/cli @commitlint/config-conventional
-
-      - name: Configure Commitlint
-        run: |
+          node-version: '16'  # 使用一个稳定的 Node.js 版本，比如 16
+      - run: npm install -g @commitlint/cli @commitlint/config-conventional
+      - run: |
           echo "module.exports = {extends: ['@commitlint/config-conventional']}" > commitlint.config.js
-
-      - name: Check Commits
+      - name: Check commits
         run: |
           if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
             commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+          else
+            commitlint --from $(git rev-list --max-parents=0 HEAD) --to HEAD --verbose
           fi
