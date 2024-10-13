@@ -52,4 +52,4 @@ jobs:
           fi
 
           # 执行commitlint检查
-          npx commitlint --since $COMMIT_RANGE --to HEAD --verbose
+          npx commitlint --from $COMMIT_RANGE --to HEAD --verbose
