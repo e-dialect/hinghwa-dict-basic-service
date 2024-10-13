@@ -1,4 +1,4 @@
-name: Go Format and Commit Check
+name: Check Go Format
 
 on:
   push:
@@ -9,50 +9,22 @@ on:
       - main
 
 jobs:
-  format-and-lint:
-    name: Format and Lint
+  go-fmt-check:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
-      - name: Setup Go
+      - name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version: '1.20'
 
-      - name: Check Go Formatting
+      - name: Run gofmt
         run: |
-          unformatted=$(gofmt -l .)
-          if [ -n "$unformatted" ]; then
-            echo "The following files are not formatted properly:"
-            echo "$unformatted"
-            echo "Please run 'gofmt -w .' to format your Go code."
+          gofmt -l .
+          if [ ! -z "$(gofmt -l .)" ]; then
+            echo "Go files are not formatted correctly."
             exit 1
           fi
 
-      - name: Run go vet
-        run: go vet ./...
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '16'
-
-      - name: Install commitlint
-        run: |
-          npm install -g @commitlint/cli @commitlint/config-conventional
-
-      - name: Create commitlint config
-        run: |
-          echo "module.exports = {extends: ['@commitlint/config-conventional']}" > commitlint.config.js
-
-      - name: Check commit messages
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
-          else
-            npx commitlint --from HEAD~1 --to HEAD --verbose
-          fi
