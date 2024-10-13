@@ -33,10 +33,23 @@ jobs:
 
           # 确定检查的范围
           if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
-            COMMIT_RANGE="${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}"
+            # 获取 PR 的 base 和 head SHA
+            BASE_SHA=${{ github.event.pull_request.base.sha }}
+            HEAD_SHA=${{ github.event.pull_request.head.sha }}
+
+            # 确保提交范围正确
+            COMMIT_RANGE="$BASE_SHA...$HEAD_SHA"
           else
-            COMMIT_RANGE="$(git rev-list --max-parents=0 HEAD)...HEAD"
+            # 对于非 PR 事件，获取最近一次提交的父级 SHA
+            PARENT_SHA=$(git rev-parse --verify HEAD~1)
+            COMMIT_RANGE="$PARENT_SHA...HEAD"
+          fi
+
+          # 确保提交范围有效
+          if [ -z "$COMMIT_RANGE" ]; then
+            echo "No valid commit range found."
+            exit 0
           fi
 
           # 执行commitlint检查
-          npx commitlint --from $COMMIT_RANGE --to HEAD --verbose
+          npx commitlint --since $COMMIT_RANGE --to HEAD --verbose
