@@ -16,31 +16,45 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3  # 使用最新版本的 checkout 动作
+        with:
+          fetch-depth: 0  # 获取完整的提交历史
 
       - name: Set up Node.js
         uses: actions/setup-node@v3  # 使用最新版本的 setup-node 动作
         with:
           node-version: '20'  # 显式指定 Node.js 版本
 
-      - name: Generate package-lock.json
+      - name: Ensure package.json Exists
+        id: check_package_json
         run: |
-          # 确保 package-lock.json 文件存在
+          if [ -f "package.json" ]; then
+            echo "::set-output name=exists::true"
+          else
+            echo "::set-output name=exists::false"
+          fi
+
+      - name: Generate package-lock.json if necessary
+        if: steps.check_package_json.outputs.exists == 'true'
+        run: |
+          # 如果 package-lock.json 不存在，则生成
           if [ ! -f "package-lock.json" ]; then
-            # 如果 package-lock.json 不存在，则生成
             npm install
           fi
 
       - name: Install Dependencies
+        if: steps.check_package_json.outputs.exists == 'true'
         run: |
           npm ci  # 使用 npm ci 安装依赖
 
       - name: Configure Commitlint
+        if: steps.check_package_json.outputs.exists == 'true'
         run: |
           # 确保 .commitlintrc.js 存在
           touch .commitlintrc.js
           echo "module.exports = {extends: ['@commitlint/config-conventional']};"> .commitlintrc.js
 
       - name: Check Commits
+        if: steps.check_package_json.outputs.exists == 'true'
         run: |
           if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
             npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
