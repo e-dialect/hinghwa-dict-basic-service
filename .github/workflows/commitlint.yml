@@ -15,14 +15,12 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+        uses: actions/checkout@v4  # 使用最新版本的 checkout 动作
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4  # 使用最新版本的 setup-node 动作
         with:
-          node-version: '20'
+          node-version: '20'  # 显式指定 Node.js 版本
 
       - name: Install Dependencies
         run: |
