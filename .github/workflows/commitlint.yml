@@ -13,17 +13,30 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # 获取完整的历史记录
+
       - uses: actions/setup-node@v3
         with:
           node-version: '20'
+
       - run: npm install -g @commitlint/cli @commitlint/config-conventional
+
       - run: |
           echo "module.exports = {extends: ['@commitlint/config-conventional']}" > commitlint.config.js
+
       - name: Check commits
         run: |
+          # 获取当前仓库的所有提交信息
+          git log --pretty=format:'%H %s%n' --no-merges | tee /tmp/commits.log
+          # 打印所有提交信息以供调试
+          cat /tmp/commits.log
+
+          # 确定检查的范围
           if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
-            commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+            COMMIT_RANGE="${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}"
           else
-            commitlint --from $(git rev-list --max-parents=0 HEAD) --to HEAD --verbose
+            COMMIT_RANGE="$(git rev-list --max-parents=0 HEAD)...HEAD"
           fi
+
+          # 执行commitlint检查
+          npx commitlint --from $COMMIT_RANGE --to HEAD --verbose
