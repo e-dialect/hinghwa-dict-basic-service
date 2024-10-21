@@ -1,19 +1,23 @@
-name: Go
-on: [push]
-
+yaml
+name: Animal Farm NodeJS CI
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v4
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.21.x'
-      - name: Install dependencies
-        run: go get .
-      - name: Build
-        run: go build -v ./...
-      - name: Test with the Go CLI
-        run: go test
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Use Node.js
+      uses: actions/setup-node@v1
+      with:
+        node-version: '18.x'
+    - name: Run Yarn 
+      run: yarn
+    - name: Run tests
+      run: yarn test
