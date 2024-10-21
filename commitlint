@@ -1,0 +1,17 @@
+name: Commit Lint Check
+
+on: [push, pull_request]
+
+jobs:
+  commit-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - run: npm install -g @commitlint/cli @commitlint/config-conventional
+      - run: echo "module.exports = {extends: ['@commitlint/config-conventional']}" > commitlint.config.js
+      - run: commitlint --from HEAD~1 --to HEAD --verbose
