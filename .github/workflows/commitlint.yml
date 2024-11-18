@@ -1,3 +1,4 @@
+
 name: Commitlint
 
 on:
@@ -8,6 +9,7 @@ on:
       - main
       - dev                   # 添加 dev 分支的 PR 检查
   workflow_dispatch:           # 手动触发 workflow
+
 
 jobs:
   commitlint:
