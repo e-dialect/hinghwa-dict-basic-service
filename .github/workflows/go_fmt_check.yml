@@ -23,6 +23,5 @@ jobs:
 
       - name: Check Go formatting
         run: |
-          cd ../../src
-          go fmt ./
+          go fmt ./...
           git diff --exit-code || (echo "❌ Go files are not properly formatted. Run 'go fmt' locally to fix." && exit 1)
