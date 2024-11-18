@@ -1,0 +1,27 @@
+name: Go Format Check
+
+on:
+  push:
+    branches:
+      - "**"                  # 监听所有分支的 push
+  pull_request:               # 针对所有 PR
+    branches:
+      - "**"
+  workflow_dispatch:           # 手动触发 workflow
+
+jobs:
+  go-format-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.22"  # 使用稳定的 Go 版本
+
+      - name: Check Go formatting
+        run: |
+          go fmt ./...
+          git diff --exit-code || (echo "❌ Go files are not properly formatted. Run 'go fmt' locally to fix." && exit 1)

@@ -1,0 +1,33 @@
+
+name: Commitlint
+
+on:
+  push:
+    branches-ignore: ["main"]  # 排除 main 分支的 push 事件
+  pull_request:                # 针对 pull_request 事件
+    branches:
+      - main
+      - dev                   # 添加 dev 分支的 PR 检查
+  workflow_dispatch:           # 手动触发 workflow
+
+
+jobs:
+  commitlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0       # 确保可以获取完整的提交历史
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16'  # 使用稳定的 Node.js 版本
+      - run: npm install -g @commitlint/cli @commitlint/config-conventional
+      - run: |
+          echo "module.exports = {extends: ['@commitlint/config-conventional']}" > commitlint.config.js
+      - name: Check commits
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+            commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+          else
+            commitlint --from $(git rev-list --max-parents=0 HEAD) --to HEAD --verbose
+          fi

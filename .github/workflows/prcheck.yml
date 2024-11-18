@@ -1,0 +1,20 @@
+name: Pull Request Title Check
+
+on:
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  pr-title-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check pull request title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          if ! echo "$PR_TITLE" | grep -Eq "^(feat|fix|docs|style|refactor|test|chore): .+"; then
+            echo "❌ Pull request title does not follow the conventional format (e.g., 'feat: description')"
+            exit 1
+          fi
