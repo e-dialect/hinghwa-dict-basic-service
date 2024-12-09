@@ -1,0 +1,90 @@
+// feat: Initialize main package and imports
+package main
+
+import (
+        "log"
+        "net/http"
+        "net/http/httputil"
+        "net/url"
+)
+
+// feat: Define configuration struct
+    type Config struct {
+            ListenAddr      string
+            TargetURL       string
+            AuthServiceURL  string
+}
+
+// feat: Define entry point struct with core dependencies
+    type EntryPoint struct {
+            config     *Config
+            proxy      *httputil.ReverseProxy
+            authClient *http.Client
+}
+
+// feat: Implement EntryPoint constructor
+    func NewEntryPoint(config *Config) (*EntryPoint, error) {
+            targetURL, err := url.Parse(config.TargetURL)
+            if err != nil {
+                    return nil, err
+            }
+        
+            return &EntryPoint{
+                config:     config,
+                proxy:      httputil.NewSingleHostReverseProxy(targetURL),
+                authClient: &http.Client{},
+            }, nil
+}
+
+// feat: Add authentication verification method
+    func (ep *EntryPoint) verifyAuth(token string) (bool, error) {
+            req, err := http.NewRequest("POST", ep.config.AuthServiceURL, nil)
+            if err != nil {
+                    return false, err
+            }
+        
+            req.Header.Set("Authorization", token)
+            resp, err := ep.authClient.Do(req)
+            if err != nil {
+                    return false, err
+            }
+            defer resp.Body.Close()
+        
+            return resp.StatusCode == http.StatusOK, nil
+}
+
+// feat: Implement proxy handler with authentication
+    func (ep *EntryPoint) ProxyHandler(w http.ResponseWriter, r *http.Request) {
+            token := r.Header.Get("Authorization")
+        
+            authorized, err := ep.verifyAuth(token)
+            if err != nil {
+                    http.Error(w, "Authorization service error", http.StatusInternalServerError)
+                    return
+            }
+        
+            if !authorized {
+                http.Error(w, "Unauthorized", http.StatusUnauthorized)
+                return
+            }
+        
+            ep.proxy.ServeHTTP(w, r)
+}
+
+// feat: Set up main function with configuration and server initialization
+    func main() {
+            config := &Config{
+                ListenAddr:      ":8080",
+                TargetURL:       "http://target-service:8000",
+                AuthServiceURL:  "http://auth-service:8001/verify",
+            }
+        
+            entryPoint, err := NewEntryPoint(config)
+            if err != nil {
+                log.Fatal(err)
+            }
+        
+            http.HandleFunc("/", entryPoint.ProxyHandler)
+            log.Printf("Starting entry point on %s", config.ListenAddr)
+            log.Fatal(http.ListenAndServe(config.ListenAddr, nil))
+}
