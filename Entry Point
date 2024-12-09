@@ -13,20 +13,20 @@ import (
             ListenAddr      string
             TargetURL       string
             AuthServiceURL  string
-    }
+}
 
 // feat: Define entry point struct with core dependencies
     type EntryPoint struct {
             config     *Config
             proxy      *httputil.ReverseProxy
             authClient *http.Client
-    }
+}
 
 // feat: Implement EntryPoint constructor
     func NewEntryPoint(config *Config) (*EntryPoint, error) {
             targetURL, err := url.Parse(config.TargetURL)
             if err != nil {
-                return nil, err
+                    return nil, err
             }
         
             return &EntryPoint{
@@ -34,24 +34,24 @@ import (
                 proxy:      httputil.NewSingleHostReverseProxy(targetURL),
                 authClient: &http.Client{},
             }, nil
-        }
+}
 
 // feat: Add authentication verification method
     func (ep *EntryPoint) verifyAuth(token string) (bool, error) {
             req, err := http.NewRequest("POST", ep.config.AuthServiceURL, nil)
             if err != nil {
-                return false, err
+                    return false, err
             }
         
             req.Header.Set("Authorization", token)
             resp, err := ep.authClient.Do(req)
             if err != nil {
-                return false, err
+                    return false, err
             }
             defer resp.Body.Close()
         
             return resp.StatusCode == http.StatusOK, nil
-        }
+}
 
 // feat: Implement proxy handler with authentication
     func (ep *EntryPoint) ProxyHandler(w http.ResponseWriter, r *http.Request) {
@@ -59,8 +59,8 @@ import (
         
             authorized, err := ep.verifyAuth(token)
             if err != nil {
-                http.Error(w, "Authorization service error", http.StatusInternalServerError)
-                return
+                    http.Error(w, "Authorization service error", http.StatusInternalServerError)
+                    return
             }
         
             if !authorized {
@@ -69,7 +69,7 @@ import (
             }
         
             ep.proxy.ServeHTTP(w, r)
-        }
+}
 
 // feat: Set up main function with configuration and server initialization
     func main() {
@@ -87,4 +87,4 @@ import (
             http.HandleFunc("/", entryPoint.ProxyHandler)
             log.Printf("Starting entry point on %s", config.ListenAddr)
             log.Fatal(http.ListenAndServe(config.ListenAddr, nil))
-        }
+}
