@@ -1,3 +1,14 @@
+# Start of commit message
+feat(proxy): implement basic entry point with reverse proxy functionality
+
+- Add EntryPoint structure with reverse proxy capabilities
+- Implement basic authentication verification
+- Configure proxy routes and authorization service connection
+- Add error handling for authentication and proxy requests
+
+BREAKING CHANGE: Initial implementation of entry point service
+# End of commit message
+
 package main
 
 import (
@@ -24,7 +35,6 @@ func NewEntryPoint(config *Config) (*EntryPoint, error) {
     if err != nil {
         return nil, err
     }
-
     return &EntryPoint{
         config:     config,
         proxy:      httputil.NewSingleHostReverseProxy(targetURL),
@@ -49,9 +59,7 @@ func (ep *EntryPoint) verifyAuth(token string) (bool, error) {
 }
 
 func (ep *EntryPoint) ProxyHandler(w http.ResponseWriter, r *http.Request) {
-   
     token := r.Header.Get("Authorization")
-    
     
     authorized, err := ep.verifyAuth(token)
     if err != nil {
@@ -63,7 +71,6 @@ func (ep *EntryPoint) ProxyHandler(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "Unauthorized", http.StatusUnauthorized)
         return
     }
-    
     
     ep.proxy.ServeHTTP(w, r)
 }
